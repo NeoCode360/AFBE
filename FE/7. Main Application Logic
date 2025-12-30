@@ -1,0 +1,330 @@
+7. Main Application Logic
+
+import React, { useState, useEffect, useRef } from 'react';
+import { Layers, ArrowRight, ArrowLeft, AlertCircle, XCircle } from 'lucide-react';
+
+// Styles
+import './index.css';
+
+// Types & Services
+import { ProjectMeta, FeatureFlags, LogEntry } from './types';
+import { FactoryAPI } from './services/apiFactory';
+
+// Components
+import { Header } from './components/layout/Header';
+import { Terminal } from './components/layout/Terminal';
+import { StepIcon } from './components/ui/StepIcon';
+
+// Wizard Steps
+import { DefinitionStep } from './components/wizard/DefinitionStep';
+import { AssetsStep } from './components/wizard/AssetsStep';
+import { FeaturesStep } from './components/wizard/FeaturesStep';
+import { BuildStep } from './components/wizard/BuildStep';
+import { ResultStep } from './components/wizard/ResultStep';
+
+export default function App() {
+  const [step, setStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [projectId, setProjectId] = useState<string | null>(null);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [isSimulationMode, setIsSimulationMode] = useState(true);
+  const [buildStatus, setBuildStatus] = useState<string>("");
+  
+  const [meta, setMeta] = useState<ProjectMeta>({
+    name: 'OrderProcessingAPI',
+    groupId: 'com.enterprise.orders',
+    artifactId: 'order-service-api',
+    version: '1.0.0-SNAPSHOT',
+    description: 'Auto-generated API for Order Management System'
+  });
+
+  const [swaggerFile, setSwaggerFile] = useState<File | null>(null);
+  const [jarFile, setJarFile] = useState<File | null>(null);
+  
+  const [features, setFeatures] = useState<FeatureFlags>({
+    idempotency: false,
+    validation: true,
+    entitlements: false,
+    auditLogging: false,
+  });
+
+  const addLog = (msg: string, type?: 'info' | 'highlight' | 'error') => {
+    setLogs(prev => [...prev, { msg: `[${new Date().toLocaleTimeString()}] ${msg}`, type }]);
+    if (type === 'highlight' || type === 'info') {
+        const cleanMsg = msg.replace(/^\[.*?\]\s*/, '');
+        setBuildStatus(cleanMsg);
+    }
+  };
+
+  // --- Handlers ---
+
+  const handleCreateDraft = async () => {
+    setIsLoading(true);
+    setError(null);
+    addLog("POST /api/projects - Initializing Session...");
+
+    if (isSimulationMode) {
+      setTimeout(() => {
+        const id = "PROJ-" + Math.floor(Math.random() * 10000);
+        setProjectId(id);
+        addLog(`[SIM] Session Created: ${id}`, 'highlight');
+        setIsLoading(false);
+        setStep(2);
+      }, 800);
+    } else {
+      try {
+        const project = await FactoryAPI.createProject(meta);
+        setProjectId(project.id);
+        addLog(`[REAL] Project Created: ${project.id}`, 'highlight');
+        setIsLoading(false);
+        setStep(2);
+      } catch (err: any) {
+        setError(err.message);
+        addLog(`Error: ${err.message}`, 'error');
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!projectId) return;
+    setIsLoading(true);
+    setError(null);
+    addLog(`Uploading Assets for ${projectId}...`);
+
+    if (isSimulationMode) {
+      setTimeout(() => {
+        addLog("[SIM] OpenAPI Spec validated.", 'info');
+        addLog("[SIM] Assets stored in In-Memory DB.");
+        setIsLoading(false);
+        setStep(3);
+      }, 1200);
+    } else {
+      try {
+        if (swaggerFile) await FactoryAPI.uploadSwagger(projectId, swaggerFile);
+        addLog("[REAL] Swagger Uploaded.", 'info');
+        if (jarFile) await FactoryAPI.uploadJar(projectId, jarFile);
+        addLog("[REAL] JAR Uploaded.", 'info');
+        setIsLoading(false);
+        setStep(3);
+      } catch (err: any) {
+        setError(err.message);
+        addLog(`Upload Error: ${err.message}`, 'error');
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleConfig = async () => {
+    if (!projectId) return;
+    setIsLoading(true);
+    setError(null);
+    addLog("Saving Configuration...");
+
+    if (isSimulationMode) {
+      setTimeout(() => {
+        addLog("[SIM] Configuration persisted.", 'info');
+        setIsLoading(false);
+        setStep(4);
+      }, 800);
+    } else {
+      try {
+        await FactoryAPI.updateConfig(projectId, features);
+        addLog("[REAL] Config Saved.", 'highlight');
+        setIsLoading(false);
+        setStep(4);
+      } catch (err: any) {
+        setError(err.message);
+        addLog(`Config Error: ${err.message}`, 'error');
+        setIsLoading(false);
+      }
+    }
+  }
+
+  const generateCalled = useRef(false);
+  
+  useEffect(() => {
+      if (step === 4 && !generateCalled.current && !isLoading && !error) {
+          generateCalled.current = true;
+          handleGenerate();
+      }
+      if (step !== 4) {
+          generateCalled.current = false;
+      }
+  }, [step]);
+
+  const handleGenerate = async () => {
+    if (!projectId) return;
+    setIsLoading(true);
+    setError(null); 
+    
+    if (isSimulationMode) {
+      addLog(`[SIM] Starting In-Memory Build...`, 'highlight');
+      
+      const willFail = Math.random() < 0.3; // 30% chance of error for demo
+
+      if (willFail) {
+        const failSequence = [
+          { t: 500, msg: "Initializing Generator Engine..." },
+          { t: 1500, msg: "Scaffolding Multi-Module Maven Project...", type: 'info' },
+          { t: 2500, msg: "Creating module: 'contract' (OpenAPI Generator)" },
+          { t: 3000, msg: "Error: Mustache Template Syntax Error in 'contract-pom.xml'", type: 'error' },
+          { t: 3500, msg: "Build Failed. Rolling back changes.", type: 'error' }
+        ];
+        
+        failSequence.forEach(({ t, msg, type }) => {
+          setTimeout(() => {
+             addLog(msg, type as any);
+             if (t === 3500) {
+               setIsLoading(false);
+               setError("Template Rendering Exception: Missing required property 'groupId'");
+               setBuildStatus("Failed during Contract Module generation");
+             }
+          }, t);
+        });
+
+      } else {
+        const sequence = [
+            { t: 500, msg: "Initializing Generator Engine..." },
+            { t: 1500, msg: "Scaffolding Multi-Module Maven Project...", type: 'info' },
+            { t: 2500, msg: "Creating module: 'root' (Aggregator POM)" },
+            { t: 3000, msg: "Creating module: 'contract' (OpenAPI Generator)" },
+            { t: 3500, msg: "Creating module: 'service' (Spring Boot App)" },
+            { t: 4000, msg: "Injecting Delegate Impl..." },
+            { t: 5000, msg: "Zipping artifacts...", type: 'highlight' }
+        ];
+        sequence.forEach(({ t, msg, type }) => {
+            setTimeout(() => {
+            addLog(msg, type as any);
+            if (t === 5000) {
+                setIsLoading(false);
+                setStep(5);
+            }
+            }, t);
+        });
+      }
+
+    } else {
+      addLog(`[REAL] Requesting Generation...`, 'highlight');
+      try {
+        await FactoryAPI.generate(projectId);
+        addLog("[REAL] Generation Successful.", 'highlight');
+        setIsLoading(false);
+        setStep(5);
+      } catch (err: any) {
+        const errMsg = err.message || 'Unknown Error';
+        setError(errMsg);
+        addLog(`Generation Error: ${errMsg}`, 'error');
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleDownload = () => {
+    if (isSimulationMode) {
+      alert("This is a simulation. In real mode, this downloads the ZIP.");
+    } else if (projectId) {
+      window.location.href = FactoryAPI.getDownloadLink(projectId);
+    }
+  };
+
+  const handleReset = () => {
+    setStep(1);
+    setProjectId(null);
+    setSwaggerFile(null);
+    setJarFile(null);
+    setLogs([]);
+    setError(null);
+    setBuildStatus("");
+    generateCalled.current = false;
+  };
+
+  return (
+    <div className="af-app">
+      <div className="af-container">
+        
+        {/* Header */}
+        <Header 
+          isSimulationMode={isSimulationMode}
+          toggleSimulation={() => setIsSimulationMode(!isSimulationMode)}
+          step={step}
+          projectId={projectId}
+        />
+
+        {/* Steps */}
+        <div className="af-steps">
+          <StepIcon num={1} current={step} label="Definition" />
+          <StepIcon num={2} current={step} label="Assets" />
+          <StepIcon num={3} current={step} label="Features" />
+          <StepIcon num={4} current={step} label="Manufacture" />
+          <StepIcon num={5} current={step} label="Artifact" />
+        </div>
+
+        {/* Error Banner (Steps 1-3) */}
+        {error && step < 4 && (
+          <div className="af-error">
+            <AlertCircle size={24} />
+            <div>
+              <strong>Process Failed</strong>
+              <span>{error}</span>
+            </div>
+            <button onClick={() => setError(null)} style={{marginLeft:'auto', background:'none', border:'none', color:'inherit', cursor:'pointer'}}><XCircle size={18}/></button>
+          </div>
+        )}
+
+        <div className="af-grid">
+          {/* Main Wizard */}
+          <div className="af-panel">
+            <div className="af-content">
+              {step === 1 && <DefinitionStep meta={meta} setMeta={setMeta} />}
+              {step === 2 && <AssetsStep swaggerFile={swaggerFile} setSwaggerFile={setSwaggerFile} jarFile={jarFile} setJarFile={setJarFile} />}
+              {step === 3 && <FeaturesStep features={features} setFeatures={setFeatures} />}
+              {step === 4 && (
+                <BuildStep 
+                  error={error} 
+                  buildStatus={buildStatus} 
+                  onRetry={() => { setError(null); handleGenerate(); }}
+                  onReupload={() => { setError(null); setStep(2); }}
+                  onEditConfig={() => { setError(null); setStep(3); }}
+                />
+              )}
+              {step === 5 && <ResultStep meta={meta} onDownload={handleDownload} onReset={handleReset} />}
+            </div>
+
+            {/* Footer */}
+            {step < 4 && (
+              <div className="af-footer" style={{justifyContent: step === 1 ? 'flex-end' : 'space-between'}}>
+                {step > 1 && (
+                  <button className="btn btn-nav" disabled={step === 1} onClick={() => setStep(step - 1)}>
+                    <ArrowLeft size={16}/> Back
+                  </button>
+                )}
+                <button 
+                  className="btn btn-primary" 
+                  disabled={isLoading || (step === 2 && !swaggerFile)}
+                  onClick={step === 1 ? handleCreateDraft : step === 2 ? handleUpload : handleConfig}
+                >
+                  {isLoading ? <><div className="spinner" style={{width:'1em', height:'1em', borderTopColor:'white', borderRightColor:'white', borderBottomColor:'white'}}></div> Processing...</> : <>{step === 3 ? 'Generate API' : 'Next Step'} <ArrowRight size={16}/></>}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Right Panel */}
+          <div style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
+            <Terminal logs={logs} isLoading={isLoading} />
+
+            <div className="af-info">
+              <h3><Layers size={16}/> Architecture</h3>
+              <p>
+                <strong>{isSimulationMode ? 'SIMULATION' : 'LIVE'} Mode:</strong> The Factory scaffolds a 3-module Maven structure (`root`, `contract`, `service`) into a ZIP file.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}

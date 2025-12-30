@@ -1,0 +1,42 @@
+6. Wizard Step Components - Step 4 - Build
+
+
+import React from 'react';
+import { AlertTriangle } from 'lucide-react';
+
+interface BuildStepProps {
+  error: string | null;
+  buildStatus: string;
+  onRetry: () => void;
+  onReupload: () => void;
+  onEditConfig: () => void;
+}
+
+export const BuildStep: React.FC<BuildStepProps> = ({ error, buildStatus, onRetry, onReupload, onEditConfig }) => {
+  return (
+    <div className="animate-enter af-build-screen">
+      {error ? (
+        <div className="af-error-panel">
+            <div style={{color: '#ef4444', marginBottom: '1rem', display: 'flex', justifyContent: 'center'}}><AlertTriangle size={64} /></div>
+            <h2 className="text-2xl font-bold mb-2" style={{color: '#ef4444'}}>Manufacturing Failed</h2>
+            <div className="af-error-details">
+                <p style={{color: '#fca5a5', fontFamily:'monospace', marginBottom:'0.5rem'}}>{error}</p>
+                <p className="text-xs text-slate-500">Trace: {buildStatus || 'Init'}</p>
+            </div>
+            <div style={{display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'center', flexWrap: 'wrap'}}>
+                <button className="btn btn-secondary" onClick={onReupload}>Re-upload Assets</button>
+                <button className="btn btn-secondary" onClick={onEditConfig}>Edit Config</button>
+                <button className="btn btn-primary" onClick={onRetry}>Retry Build</button>
+            </div>
+        </div>
+      ) : (
+        <>
+            <div className="spinner" style={{width: '4rem', height: '4rem', margin: '0 auto 2rem'}}></div>
+            <h2 className="text-2xl font-bold mb-2" style={{color: 'white'}}>Manufacturing API</h2>
+            <p className="text-slate-400">Generates Multi-Module Maven Project...</p>
+            {buildStatus && <div className="af-build-status">{buildStatus}</div>}
+        </>
+      )}
+    </div>
+  );
+};

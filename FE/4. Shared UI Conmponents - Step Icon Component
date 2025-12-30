@@ -1,0 +1,20 @@
+4. Shared UI Conmponents - Step Icon Component
+----------------------------
+
+import React from 'react';
+import { CheckCircle } from 'lucide-react';
+
+interface StepIconProps {
+  num: number;
+  current: number;
+  label: string;
+}
+
+export const StepIcon: React.FC<StepIconProps> = ({ num, current, label }) => (
+  <div className={`af-step ${current === num ? 'active' : current > num ? 'done' : ''}`}>
+    <div className="af-step-circle">
+      {current > num ? <CheckCircle size={20}/> : num}
+    </div>
+    <span className="af-step-label">{label}</span>
+  </div>
+);

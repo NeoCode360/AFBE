@@ -1,0 +1,52 @@
+3. API Service
+///////////////////
+
+import { ProjectMeta, FeatureFlags } from '../types';
+
+const API_BASE = "http://localhost:8080/api/projects";
+
+export const FactoryAPI = {
+  createProject: async (meta: ProjectMeta) => {
+    const res = await fetch(API_BASE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(meta)
+    });
+    if (!res.ok) throw new Error(`Create Failed: ${res.statusText}`);
+    return await res.json();
+  },
+  uploadSwagger: async (id: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(`${API_BASE}/${id}/swagger`, { method: 'PUT', body: formData });
+    if (!res.ok) throw new Error(`Swagger Upload Failed: ${res.statusText}`);
+  },
+  uploadJar: async (id: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(`${API_BASE}/${id}/jar`, { method: 'PUT', body: formData });
+    if (!res.ok) throw new Error(`JAR Upload Failed: ${res.statusText}`);
+  },
+  updateConfig: async (id: string, features: FeatureFlags) => {
+    const projectUpdate = { enabledFeatures: Object.keys(features).filter(k => features[k as keyof FeatureFlags]) };
+    const res = await fetch(`${API_BASE}/${id}/config`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(projectUpdate)
+    });
+    if (!res.ok) throw new Error(`Config Update Failed: ${res.statusText}`);
+    return await res.json();
+  },
+  generate: async (id: string) => {
+    const res = await fetch(`${API_BASE}/${id}/generate`, { method: 'POST' });
+    if (!res.ok) {
+        let errorMsg = res.statusText;
+        try {
+            const body = await res.text();
+            if (body) errorMsg = `${res.statusText} - ${body}`;
+        } catch (e) {}
+        throw new Error(errorMsg);
+    }
+  },
+  getDownloadLink: (id: string) => `${API_BASE}/${id}/download`
+};

@@ -1,0 +1,42 @@
+6. Wizard Step Components - Step 1 - Definition
+
+import React from 'react';
+import { Box } from 'lucide-react';
+import { ProjectMeta } from '../../types';
+
+interface DefinitionStepProps {
+  meta: ProjectMeta;
+  setMeta: (meta: ProjectMeta) => void;
+}
+
+export const DefinitionStep: React.FC<DefinitionStepProps> = ({ meta, setMeta }) => {
+  return (
+    <div className="animate-enter">
+      <h2 className="text-xl font-bold mb-6 flex gap-2 text-white"><Box className="text-blue-500"/> Project Definition</h2>
+      <div className="af-row">
+        <div className="af-group">
+          <label className="af-label">Group ID</label>
+          <input className="af-input" value={meta.groupId} onChange={e => setMeta({...meta, groupId: e.target.value})} />
+        </div>
+        <div className="af-group">
+          <label className="af-label">Artifact ID</label>
+          <input className="af-input" value={meta.artifactId} onChange={e => setMeta({...meta, artifactId: e.target.value})} />
+        </div>
+      </div>
+      <div className="af-row">
+        <div className="af-group">
+          <label className="af-label">Version</label>
+          <input className="af-input" value={meta.version} onChange={e => setMeta({...meta, version: e.target.value})} />
+        </div>
+        <div className="af-group">
+          <label className="af-label">App Name</label>
+          <input className="af-input" value={meta.name} onChange={e => setMeta({...meta, name: e.target.value})} />
+        </div>
+      </div>
+      <div className="af-group">
+        <label className="af-label">Description</label>
+        <textarea className="af-input" style={{height: '80px', resize: 'none'}} value={meta.description} onChange={e => setMeta({...meta, description: e.target.value})} />
+      </div>
+    </div>
+  );
+};

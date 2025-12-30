@@ -1,0 +1,33 @@
+6. Wizard Step Components - Step 3 - Features
+
+
+import React from 'react';
+import { Settings, Repeat, Shield, Database, CheckCircle } from 'lucide-react';
+import { FeatureFlags } from '../../types';
+
+interface FeaturesStepProps {
+  features: FeatureFlags;
+  setFeatures: (features: FeatureFlags) => void;
+}
+
+export const FeaturesStep: React.FC<FeaturesStepProps> = ({ features, setFeatures }) => {
+  return (
+    <div className="animate-enter">
+      <h2 className="text-xl font-bold mb-6 flex gap-2 text-white"><Settings className="text-blue-500"/> Middleware Configuration</h2>
+      <div className="af-row">
+        {[
+          {k: 'idempotency', t: 'Idempotency', d: 'Redis-backed deduplication.', i: <Repeat/>},
+          {k: 'entitlements', t: 'Entitlements', d: 'RBAC checks injected via AOP.', i: <Shield/>},
+          {k: 'auditLogging', t: 'Audit Log', d: 'Async payload logging to ELK.', i: <Database/>},
+          {k: 'validation', t: 'Validation', d: 'JSR-303 Schema enforcement.', i: <CheckCircle/>}
+        ].map(f => (
+          <div key={f.k} className={`af-feature ${features[f.k as keyof FeatureFlags] ? 'selected' : ''}`} onClick={() => setFeatures({...features, [f.k as keyof FeatureFlags]: !features[f.k as keyof FeatureFlags]})}>
+            <div className="af-feature-icon">{f.i}</div>
+            <div><h4>{f.t}</h4><p>{f.d}</p></div>
+            {features[f.k as keyof FeatureFlags] && <CheckCircle size={18} className="text-blue-500" style={{position:'absolute', top:'1rem', right:'1rem', color:'#3b82f6'}}/>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};

@@ -1,0 +1,36 @@
+6. Wizard Step Components - Step 5 - Result
+
+
+import React from 'react';
+import { CheckCircle, Download } from 'lucide-react';
+import { ProjectMeta } from '../../types';
+
+interface ResultStepProps {
+  meta: ProjectMeta;
+  onDownload: () => void;
+  onReset: () => void;
+}
+
+export const ResultStep: React.FC<ResultStepProps> = ({ meta, onDownload, onReset }) => {
+  return (
+    <div className="animate-enter" style={{textAlign: 'center', padding: '2rem 0'}}>
+      <div style={{display: 'inline-flex', padding: '1.5rem', borderRadius: '50%', background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', marginBottom: '1.5rem'}}>
+        <CheckCircle size={64}/>
+      </div>
+      <h2 className="text-3xl font-bold mb-4 text-white">Project Generated</h2>
+      <div style={{background: '#0f172a', display: 'inline-block', padding: '1rem 2rem', borderRadius: '0.5rem', border: '1px solid #334155', marginBottom: '2rem', textAlign: 'left'}}>
+        <div className="text-slate-400 text-xs uppercase mb-2">Structure</div>
+        <div className="font-mono text-sm text-blue-300">
+          <div>📦 {meta.artifactId}-root</div>
+          <div className="pl-4">├── 📦 {meta.artifactId}-contract <span className="text-slate-500">(OpenAPI)</span></div>
+          <div className="pl-4">└── 📦 {meta.artifactId}-service <span className="text-slate-500">(Spring Boot)</span></div>
+        </div>
+      </div>
+      
+      <div style={{display: 'flex', gap: '1rem', justifyContent: 'center'}}>
+        <button className="btn btn-primary" onClick={onDownload}><Download size={18}/> Download ZIP</button>
+        <button className="btn btn-secondary" onClick={onReset}>Create Another</button>
+      </div>
+    </div>
+  );
+};

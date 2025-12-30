@@ -1,0 +1,41 @@
+6. Wizard Step Components - Step 2 - Assets
+
+import React from 'react';
+import { Upload, FileCode, Box } from 'lucide-react';
+
+interface AssetsStepProps {
+  swaggerFile: File | null;
+  setSwaggerFile: (file: File | null) => void;
+  jarFile: File | null;
+  setJarFile: (file: File | null) => void;
+}
+
+export const AssetsStep: React.FC<AssetsStepProps> = ({ swaggerFile, setSwaggerFile, jarFile, setJarFile }) => {
+  return (
+    <div className="animate-enter">
+      <h2 className="text-xl font-bold mb-6 flex gap-2 text-white"><Upload className="text-blue-500"/> Upload Contracts</h2>
+      <div className="af-row" style={{height: '300px'}}>
+        <div className={`af-upload ${swaggerFile ? 'active' : ''}`}>
+          <FileCode size={48} className={`af-upload-icon ${swaggerFile ? 'active' : ''}`} />
+          <h4>OpenAPI Spec</h4>
+          <p>Required (.json/.yaml)</p>
+          <label className="btn btn-secondary text-xs">
+            <input type="file" hidden onChange={e => setSwaggerFile(e.target.files?.[0] || null)}/>
+            {swaggerFile ? 'Replace File' : 'Select File'}
+          </label>
+          {swaggerFile && <div className="text-xs text-green-400 mt-2 font-mono">{swaggerFile.name}</div>}
+        </div>
+        <div className={`af-upload ${jarFile ? 'active' : ''}`}>
+          <Box size={48} className={`af-upload-icon ${jarFile ? 'active' : ''}`} />
+          <h4>Business Logic</h4>
+          <p>Optional (.jar)</p>
+          <label className="btn btn-secondary text-xs">
+            <input type="file" hidden onChange={e => setJarFile(e.target.files?.[0] || null)}/>
+            {jarFile ? 'Replace File' : 'Select File'}
+          </label>
+          {jarFile && <div className="text-xs text-green-400 mt-2 font-mono">{jarFile.name}</div>}
+        </div>
+      </div>
+    </div>
+  );
+};

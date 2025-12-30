@@ -1,0 +1,38 @@
+5. Layout Components- Header Component
+=======================================
+import React from 'react';
+import { Server, ToggleLeft, ToggleRight } from 'lucide-react';
+
+interface HeaderProps {
+  isSimulationMode: boolean;
+  toggleSimulation: () => void;
+  step: number;
+  projectId: string | null;
+}
+
+export const Header: React.FC<HeaderProps> = ({ isSimulationMode, toggleSimulation, step, projectId }) => {
+  return (
+    <header className="af-header">
+      <div className="af-brand">
+        <div className="af-logo"><Server size={24}/></div>
+        <div className="af-title">
+          <h1>API Factory</h1>
+          <p>Spring Boot Microservice Generator</p>
+        </div>
+      </div>
+      <div className="af-controls">
+        <div 
+          className={`af-mode-switch ${isSimulationMode ? 'sim' : ''} ${step > 1 ? 'disabled' : ''}`} 
+          onClick={() => step === 1 && toggleSimulation()}
+        >
+          {isSimulationMode ? <ToggleRight size={18}/> : <ToggleLeft size={18}/>}
+          <span>{isSimulationMode ? 'SIMULATION MODE' : 'REAL BACKEND'}</span>
+        </div>
+        <div className="af-status">
+          <div className={`af-dot ${projectId ? 'active' : ''}`}/>
+          {projectId ? `ID: ${projectId.split('-')[1]}` : 'READY'}
+        </div>
+      </div>
+    </header>
+  );
+};

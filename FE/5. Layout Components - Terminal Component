@@ -1,0 +1,36 @@
+5. Layout Components - Terminal Component
+============================================
+
+import React, { useEffect, useRef } from 'react';
+import { Terminal as TerminalIcon } from 'lucide-react';
+import { LogEntry } from '../../types';
+
+interface TerminalProps {
+  logs: LogEntry[];
+  isLoading: boolean;
+}
+
+export const Terminal: React.FC<TerminalProps> = ({ logs, isLoading }) => {
+  const terminalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (terminalRef.current) terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+  }, [logs]);
+
+  return (
+    <div className="af-panel" style={{height: '100%'}}>
+      <div style={{padding: '1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 'bold'}}>
+        <TerminalIcon size={16}/> GENERATOR LOGS
+      </div>
+      <div ref={terminalRef} className="af-terminal">
+        {logs.length === 0 ? <span style={{color: '#475569'}}>Waiting for activity...</span> : logs.map((l, i) => (
+          <div key={i} className="log-line">
+            <span className="log-ts">{l.msg.match(/\d+:\d+:\d+/)?.[0] || '..:..:..'}</span>
+            <span className={`log-msg ${l.type || ''}`}>{l.msg.replace(/^\d+:\d+:\d+\s/, '')}</span>
+          </div>
+        ))}
+        {isLoading && <span className="animate-pulse text-blue-400">_</span>}
+      </div>
+    </div>
+  );
+};

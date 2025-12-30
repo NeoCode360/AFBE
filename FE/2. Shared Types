@@ -1,0 +1,22 @@
+2. Shared Types
+/////////
+
+export interface ProjectMeta {
+  name: string;
+  groupId: string;
+  artifactId: string;
+  version: string;
+  description: string;
+}
+
+export interface FeatureFlags {
+  idempotency: boolean;
+  validation: boolean;
+  entitlements: boolean;
+  auditLogging: boolean;
+}
+
+export interface LogEntry {
+  msg: string;
+  type?: 'info' | 'highlight' | 'error';
+}
